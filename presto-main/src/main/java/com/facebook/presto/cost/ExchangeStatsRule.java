@@ -25,14 +25,14 @@ import com.facebook.presto.sql.planner.plan.ExchangeNode;
 import java.util.List;
 import java.util.Optional;
 
+import static com.facebook.presto.SystemSessionProperties.shouldOptimizerUseHistograms;
 import static com.facebook.presto.cost.PlanNodeStatsEstimate.buildFrom;
-import static com.facebook.presto.cost.PlanNodeStatsEstimateMath.addStatsAndMaxDistinctValues;
-import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.FACT;
-import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.HIGH;
-import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.LOW;
 import static com.facebook.presto.sql.planner.plan.Patterns.exchange;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verify;
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.FACT;
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.HIGH;
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.LOW;
 
 public class ExchangeStatsRule
         extends SimpleStatsRule<ExchangeNode>
@@ -67,7 +67,8 @@ public class ExchangeStatsRule
             PlanNodeStatsEstimate sourceStatsWithMappedSymbols = mapToOutputVariables(sourceStats, node.getInputs().get(i), node.getOutputVariables());
 
             if (estimate.isPresent()) {
-                estimate = Optional.of(addStatsAndMaxDistinctValues(estimate.get(), sourceStatsWithMappedSymbols));
+                PlanNodeStatsEstimateMath calculator = new PlanNodeStatsEstimateMath(shouldOptimizerUseHistograms(session));
+                estimate = Optional.of(calculator.addStatsAndMaxDistinctValues(estimate.get(), sourceStatsWithMappedSymbols));
             }
             else {
                 estimate = Optional.of(sourceStatsWithMappedSymbols);
