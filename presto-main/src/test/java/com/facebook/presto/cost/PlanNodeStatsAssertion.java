@@ -14,6 +14,7 @@
 package com.facebook.presto.cost;
 
 import com.facebook.presto.spi.relation.VariableReferenceExpression;
+import com.facebook.presto.spi.statistics.SourceInfo;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
@@ -51,9 +52,9 @@ public class PlanNodeStatsAssertion
         return this;
     }
 
-    public PlanNodeStatsAssertion confident(boolean expected)
+    public PlanNodeStatsAssertion confident(SourceInfo.ConfidenceLevel expected)
     {
-        assertEquals(actual.isConfident(), expected);
+        assertEquals(actual.confidenceLevel(), expected);
         return this;
     }
 
@@ -100,7 +101,7 @@ public class PlanNodeStatsAssertion
     public PlanNodeStatsAssertion equalTo(PlanNodeStatsEstimate expected)
     {
         assertEstimateEquals(actual.getOutputRowCount(), expected.getOutputRowCount(), "outputRowCount mismatch");
-        assertEquals(actual.isConfident(), expected.isConfident());
+        assertEquals(actual.confidenceLevel(), expected.confidenceLevel());
 
         for (VariableReferenceExpression variable : union(expected.getVariablesWithKnownStatistics(), actual.getVariablesWithKnownStatistics())) {
             assertVariableStatsEqual(variable, actual.getVariableStatistics(variable), expected.getVariableStatistics(variable));

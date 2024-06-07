@@ -13,17 +13,19 @@
  */
 package com.facebook.presto.spi.statistics;
 
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.LOW;
+
 /**
  * Describes plan statistics which are derived from cost based optimizer.
  */
 public class CostBasedSourceInfo
         extends SourceInfo
 {
-    private boolean confident;
+    private ConfidenceLevel confidenceLevel;
 
-    public CostBasedSourceInfo(boolean confident)
+    public CostBasedSourceInfo(ConfidenceLevel confidenceLevel)
     {
-        this.confident = confident;
+        this.confidenceLevel = confidenceLevel;
     }
 
     @Override
@@ -45,9 +47,9 @@ public class CostBasedSourceInfo
     }
 
     @Override
-    public boolean isConfident()
+    public ConfidenceLevel confidenceLevel()
     {
-        return confident;
+        return confidenceLevel;
     }
 
     @Override

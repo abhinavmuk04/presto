@@ -18,12 +18,14 @@ import com.facebook.presto.matching.Pattern;
 import com.facebook.presto.spi.plan.ProjectNode;
 import com.facebook.presto.spi.relation.RowExpression;
 import com.facebook.presto.spi.relation.VariableReferenceExpression;
+import com.facebook.presto.spi.statistics.SourceInfo;
 import com.facebook.presto.sql.planner.TypeProvider;
 import com.facebook.presto.sql.planner.iterative.Lookup;
 
 import java.util.Map;
 import java.util.Optional;
 
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.LOW;
 import static com.facebook.presto.sql.planner.plan.Patterns.project;
 import static java.util.Objects.requireNonNull;
 
@@ -50,9 +52,12 @@ public class ProjectStatsRule
     protected Optional<PlanNodeStatsEstimate> doCalculate(ProjectNode node, StatsProvider statsProvider, Lookup lookup, Session session, TypeProvider types)
     {
         PlanNodeStatsEstimate sourceStats = statsProvider.getStats(node.getSource());
+
+        boolean noChange = noChangeToSourceColumns(node);
+        SourceInfo.ConfidenceLevel newConfidence = noChange ? sourceStats.confidenceLevel() : LOW;
         PlanNodeStatsEstimate.Builder calculatedStats = PlanNodeStatsEstimate.builder()
                 .setOutputRowCount(sourceStats.getOutputRowCount())
-                .setConfident(sourceStats.isConfident() && noChangeToSourceColumns(node));
+                .setConfidence(newConfidence);
 
         for (Map.Entry<VariableReferenceExpression, RowExpression> entry : node.getAssignments().entrySet()) {
             RowExpression expression = entry.getValue();

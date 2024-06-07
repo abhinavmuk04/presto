@@ -16,11 +16,14 @@ package com.facebook.presto.cost;
 import com.facebook.presto.Session;
 import com.facebook.presto.matching.Pattern;
 import com.facebook.presto.spi.plan.LimitNode;
+import com.facebook.presto.spi.statistics.SourceInfo;
 import com.facebook.presto.sql.planner.TypeProvider;
 import com.facebook.presto.sql.planner.iterative.Lookup;
 
 import java.util.Optional;
 
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.FACT;
+import static com.facebook.presto.spi.statistics.SourceInfo.ConfidenceLevel.LOW;
 import static com.facebook.presto.sql.planner.plan.Patterns.limit;
 
 public class LimitStatsRule
@@ -47,9 +50,12 @@ public class LimitStatsRule
             return Optional.of(sourceStats);
         }
 
+        SourceInfo.ConfidenceLevel confidenceLevel = sourceStats.confidenceLevel() == FACT ? FACT : LOW;
+
         // LIMIT actually limits (or when there was no row count estimated for source)
         return Optional.of(PlanNodeStatsEstimate.buildFrom(sourceStats)
                 .setOutputRowCount(node.getCount())
+                .setConfidence(confidenceLevel)
                 .build());
     }
 }
